@@ -128,21 +128,6 @@ class Lock < ActiveRecord::Base
 end
 ```
 
-## Common pattern
-
-In our use we've settled on a common pattern, one that lets us distribute the load of our processes between our application or utility servers while making sure we have no single point of failure, no single server going down (except, maybe, the database) will stop the code from executing. Continuing from the example above, we'll make sure the `FeedChecker.check_for_new_feeds` rotates among our servers.
-
-```ruby
-while true
-  Locker.run("new-feed-checker", :blocking => true) do
-    FeedChecker.check_for_new_feeds
-  end
-  sleep(Kernel.rand + 1) # Delay the next try so that the other servers will have a chance to obtain the lock
-end
-```
-
-Instead of first server having a monopoly on the lock, each server will obtain a lock only for the duration of the call to `FeedChecker.check_for_new_feeds`. We introduce a random delay so that other servers will have a chance to obtain the lock. If we didn't add that delay then after the first server finished running the FeedChecker it would immediately re-obtain the lock. This is due to how the 'blocking' mechanism works. The blocking mechanism will try to obtain the lock then sleep for half a second, repeating continually until the lock is obtained. The random delay, therefore, will make sure that another server will obtain the lock before the first server will attempt to obtain it again (since 1.Xs > 0.5s), while also randomizing the chances of the first server obtaining locks in the future. In effect this will make sure that over a long enough time period each server will have obtained an equal number of locks. A side benefit of this pattern is that if you don't need the code run constantly you could introduce a much larger sleep and random value.
-
 ## Advanced Usage
 
 Locker uses some rather simple methods to accomplish its task. These simple methods include obtaining, renewing, and releasing the locks.
@@ -179,3 +164,18 @@ Locker.run("some-unique-key") do
   # Locked using SomeOtherOtherLockModel
 end
 ```
+
+## A Common pattern
+
+In our use we've settled on a common pattern, one that lets us distribute the load of our processes between our application or utility servers while making sure we have no single point of failure, no single server going down (except, maybe, the database) will stop the code from executing. Continuing from the example above, we'll make sure the `FeedChecker.check_for_new_feeds` rotates among our servers.
+
+```ruby
+while true
+  Locker.run("new-feed-checker", :blocking => true) do
+    FeedChecker.check_for_new_feeds
+  end
+  sleep(Kernel.rand + 1) # Delay the next try so that the other servers will have a chance to obtain the lock
+end
+```
+
+Instead of first server having a monopoly on the lock, each server will obtain a lock only for the duration of the call to `FeedChecker.check_for_new_feeds`. We introduce a random delay so that other servers will have a chance to obtain the lock. If we didn't add that delay then after the first server finished running the FeedChecker it would immediately re-obtain the lock. This is due to how the 'blocking' mechanism works. The blocking mechanism will try to obtain the lock then sleep for half a second, repeating continually until the lock is obtained. The random delay, therefore, will make sure that another server will obtain the lock before the first server will attempt to obtain it again (since 1.Xs > 0.5s), while also randomizing the chances of the first server obtaining locks in the future. In effect this will make sure that over a long enough time period each server will have obtained an equal number of locks. A side benefit of this pattern is that if you don't need the code run constantly you could introduce a much larger sleep and random value.
