@@ -90,37 +90,13 @@ Otherwise you can just `gem install locker`.
 
 This gem includes generators for Rails 3.0+:
 
-```bash
-script/rails generate locker [ModelName]
-```
+`script/rails generate locker [ModelName]`
 
-The 'ModelName' defaults to 'Lock'. This will generate the Lock model and its migration.
+In Rails 2.3.x+:
 
-I apologize if you're using Rails 2.3.x, I couldn't be arsed to figure out how to make generators for it and Rails 3.x+, so you'll need to create the migration and the model yourself:
+`script/generate locker [ModelName]`
 
-```ruby
-class CreateLocks < ActiveRecord::Migration
-  def self.up
-    create_table :locks do |t|
-      t.string :locked_by
-      t.string :key
-      t.datetime :locked_at
-      t.datetime :locked_until
-    end
-
-    add_index :locks, :key, :unique => true
-  end
-
-  def self.down
-    drop_table :locks
-  end
-end
-```
-
-```ruby
-class Lock < ActiveRecord::Base
-end
-```
+The 'ModelName' defaults to 'Lock' if not specified. This will generate the Lock model and its migration.
 
 ## Advanced Usage
 
