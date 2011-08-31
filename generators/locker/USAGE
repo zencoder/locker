@@ -2,7 +2,7 @@ Description:
     Generate a 'Lock' model for use with the Locker gem.
 
 Example:
-    rails generate locker [Lock]
+    script/generate locker [Lock]
 
     'Lock' is the model name to use for the model.
 
