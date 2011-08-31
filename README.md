@@ -1,8 +1,8 @@
 # Locker
 
-Locker is a locking mechanism for limiting the concurrency of ruby code using the database. It presently only works with PostgreSQL.
+Locker is a locking mechanism for limiting the concurrency of ruby code using the database.
 
-Locker is dependent on the Postgres (pg) and ActiveRecord (>= 2.3.14) gems.
+Locker is dependent on Postgres and the ActiveRecord (>= 2.3.14) gem.
 
 ## The Basics
 
