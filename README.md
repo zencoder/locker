@@ -135,7 +135,9 @@ Locker uses some rather simple methods to accomplish its task. These simple meth
 ```ruby
 locker = Locker.new("some-unique-key")
 locker.get     # => true  (Lock obtained)
+# Do something that doesn't take too long here
 locker.renew   # => true  (Lock renewed)
+# Do another thing that doesn't take too long here
 locker.release # => false (Lock released)
 ```
 
