@@ -1,0 +1,11 @@
+Description:
+    Explain the generator
+
+Example:
+    rails generate locker [Lock]
+
+    'Lock' is the model name to use for the model.
+
+    This will create:
+        db/migrations/123456_create_locks.rb
+        app/models/locks.rb
