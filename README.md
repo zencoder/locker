@@ -154,14 +154,14 @@ end
 If you changed the name of the Lock model, or if you have multiple Lock models, you can customize it either when you run `Locker.run` or on the Locker class itself.
 
 ```ruby
-Locker.run("some-unique-key", :model => SomeOtherLockModel) do
-  # Locked using SomeOtherLockModel
-end
-
 Locker.model = SomeOtherOtherLockModel
 
 Locker.run("some-unique-key") do
   # Locked using SomeOtherOtherLockModel
+end
+
+Locker.run("some-unique-key", :model => SomeOtherLockModel) do
+  # Locked using SomeOtherLockModel
 end
 ```
 
