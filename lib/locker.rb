@@ -1,16 +1,25 @@
+require 'active_record'
 require "locker/version"
 
 class Locker
   class LockStolen < StandardError; end
 
+  if !defined?(SecureRandom)
+    SecureRandom = ActiveSupport::SecureRandom
+  end
+
   attr_accessor :identifier, :key, :renew_every, :lock_for, :model, :locked, :blocking
 
+  class << self
+    attr_accessor :model
+  end
+
   def initialize(key, options={})
-    @identifier  = "host:#{Socket.gethostname} pid:#{Process.pid} guid:#{ActiveSupport::SecureRandom.hex(16)}" rescue "pid:#{Process.pid} guid:#{ActiveSupport::SecureRandom.hex(16)}"
+    @identifier  = "host:#{Socket.gethostname} pid:#{Process.pid} guid:#{SecureRandom.hex(16)}" rescue "pid:#{Process.pid} guid:#{SecureRandom.hex(16)}"
     @key         = key
     @renew_every = (options[:renew_every] || 10.seconds).to_f
     @lock_for    = (options[:lock_for] || 30.seconds).to_f
-    @model       = (options[:model] || ::Lock)
+    @model       = (options[:model] || self.class.model || ::Lock)
     @blocking    = !!options[:blocking]
     @locked      = false
 
