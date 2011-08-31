@@ -59,7 +59,7 @@ end # Lock is released at this point
 
 When we run this on both servers only one server will obtain the lock and run `FeedChecker.check_for_new_feeds`. The other server will simply skip the block entirely. Only the server that obtains the lock will run the code, and only one server can obtain the lock at any one time. The first server to get to the lock wins! After the server that obtained the lock finishes running the code the lock will be released.
 
-This is great, we've made sure that only one server can run the code at any given time. But wait! Since the server that didn't obtain the lock just skips it and finishes running, we still can't handle one of the servers going down. If only we could wait for the lock to become available instead of skipping the block. Good news, we can!
+This is great, we've made sure that only one server can run the code at any given time. But wait! Since the server that didn't obtain the lock just skips the code and finishes running, we still can't handle one of the servers going down. If only we could wait for the lock to become available instead of skipping the gblock. Good news, we can!
 
 ### Server 1 and 2
 
