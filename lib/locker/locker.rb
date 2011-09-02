@@ -39,10 +39,12 @@ class Locker
 
     if @locked
       begin
+        parent_thread = Thread.current
+
         renewer = Thread.new do
           while @locked
             sleep @renew_every
-            renew
+            renew(parent_thread)
           end
         end
 
@@ -67,9 +69,9 @@ class Locker
     @locked = update_all(["locked_by = NULL"],["key = ? and locked_by = ?", @key, @identifier])
   end
 
-  def renew
+  def renew(thread=Thread.current)
     @locked = update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"], ["key = ? and locked_by = ?", @key, @identifier])
-    raise LockStolen unless @locked
+    thread.raise LockStolen unless @locked
     @locked
   end
 

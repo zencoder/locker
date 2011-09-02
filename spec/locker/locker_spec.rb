@@ -76,6 +76,15 @@ describe Locker do
       lock.update_attribute(:locked_by, "someone else")
       expect{ locker.renew }.to raise_error(Locker::LockStolen)
     end
+
+    it "should raise to the parent thread when the renewer is in a thread and someone steals the lock" do
+      expect do
+        Locker.run("steal me", :renew_every => (0.1).seconds) do
+          Lock.find_by_key("steal me").update_attribute(:locked_by, "contrived example")
+          sleep(0.3)
+        end
+      end.to raise_error(Locker::LockStolen)
+    end
   end
 
   describe "blocking" do
