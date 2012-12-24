@@ -1,28 +1,21 @@
 class Locker
   class LockStolen < StandardError; end
 
-  if !defined?(SecureRandom)
-    SecureRandom = ActiveSupport::SecureRandom
-  end
-
-  attr_accessor :identifier, :key, :renew_every, :lock_for, :model, :locked, :blocking
+  attr_accessor :key, :check, :check_every, :model, :locked, :blocking
 
   class << self
     attr_accessor :model
   end
 
   def initialize(key, options={})
-    @identifier  = "host:#{Socket.gethostname} pid:#{Process.pid} guid:#{SecureRandom.hex(16)}" rescue "pid:#{Process.pid} guid:#{SecureRandom.hex(16)}"
     @key         = key
-    @renew_every = (options[:renew_every] || 10.seconds).to_f
-    @lock_for    = (options[:lock_for] || 30.seconds).to_f
+    @check       = options.fetch(:check, true)
+    @check_every = (options[:check_every] || 10.seconds).to_f
     @model       = (options[:model] || self.class.model || ::Lock)
     @blocking    = !!options[:blocking]
     @locked      = false
 
-    raise ArgumentError, "renew_every must be greater than 0" if @renew_every <= 0
-    raise ArgumentError, "lock_for must be greater than 0" if @lock_for <= 0
-    raise ArgumentError, "renew_every must be less than lock_for" if @renew_every >= @lock_for
+    raise ArgumentError, "check_every must be greater than 0" if @check && @check_every <= 0
 
     ensure_key_exists
   end
@@ -33,63 +26,76 @@ class Locker
   end
 
   def run(blocking=@blocking, &block)
-    while !get && blocking
-      sleep 0.5
-    end
+    get(blocking)
 
     if @locked
       begin
-        parent_thread = Thread.current
+        if @check
+          parent_thread = Thread.current
+          connection    = @model.connection
 
-        renewer = Thread.new do
-          while @locked
-            sleep @renew_every
-            renew(parent_thread)
+          checker = Thread.new do
+            while @locked
+              sleep @check_every
+              check(parent_thread, connection)
+            end
           end
         end
 
         block.call
       ensure
-        renewer.exit rescue nil
-        release if @locked
+        if @check
+          checker.exit rescue nil
+        end
       end
-
-      true
-    else
-      false
     end
+
+    @locked
+  ensure
+    release
   end
 
-  def get
-    @locked = update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC', locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}", @identifier],
-                         ["key = ? AND (locked_by IS NULL OR locked_by = ? OR locked_until < clock_timestamp() at time zone 'UTC')", @key, @identifier])
+  def get(blocking=true)
+    lock_with = blocking ? "FOR UPDATE" : "FOR UPDATE NOWAIT"
+    @model.connection.begin_db_transaction
+    @model.find_by_key(@key).lock!(lock_with)
+    @locked = true
+  rescue ActiveRecord::StatementInvalid => e
+    if e.message !~ /could not obtain lock on row/
+      release
+      raise
+    end
+
+    false
   end
 
   def release
-    @locked = update_all(["locked_by = NULL"],["key = ? and locked_by = ?", @key, @identifier])
+    @locked = false
+    @model.connection.rollback_db_transaction unless @model.connection.outside_transaction?
   end
 
-  def renew(thread=Thread.current)
-    @locked = update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"], ["key = ? and locked_by = ?", @key, @identifier])
-    thread.raise LockStolen unless @locked
-    @locked
+  def check(options={})
+    if @check
+      thread     = options[:thread]     || Thread.current
+      connection = options[:connection] || @model.connection
+
+      if !connection.active? || connection.outside_transaction?
+        thread.raise LockStolen if @locked
+      end
+
+      @locked
+    else
+      true
+    end
   end
+
 
 private
-
-  def lock_interval
-    "interval '#{@lock_for} seconds'"
-  end
 
   def ensure_key_exists
     model.find_by_key(@key) || model.create(:key => @key)
   rescue ActiveRecord::StatementInvalid => e
     raise unless e.message =~ /duplicate key value violates unique constraint/
-  end
-
-  # Returns a boolean. True if it updates any rows, false if it didn't.
-  def update_all(*args)
-    model.update_all(*args) > 0
   end
 
 end
