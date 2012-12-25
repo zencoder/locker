@@ -1,23 +1,23 @@
 class Locker
   class LockStolen < StandardError; end
 
-  attr_accessor :key, :check, :check_every, :model, :locked, :blocking
+  if !defined?(SecureRandom)
+    SecureRandom = ActiveSupport::SecureRandom
+  end
+
+  attr_accessor :identifier, :key, :model, :locked, :blocking
 
   class << self
     attr_accessor :model
   end
 
   def initialize(key, options={})
-    @key         = key
-    @check       = options.fetch(:check, true)
-    @check_every = (options[:check_every] || 10.seconds).to_f
-    @model       = (options[:model] || self.class.model || ::Lock)
-    @blocking    = !!options[:blocking]
-    @locked      = false
-
-    raise ArgumentError, "check_every must be greater than 0" if @check && @check_every <= 0
-
-    ensure_key_exists
+    @identifier = "host:#{Socket.gethostname} pid:#{Process.pid} guid:#{SecureRandom.hex(16)}" rescue "pid:#{Process.pid} guid:#{SecureRandom.hex(16)}"
+    @key        = key
+    @model      = (options[:model] || self.class.model || ::Lock)
+    @blocking   = !!options[:blocking]
+    @locked     = false
+    @lock_id    = find_or_create_lock_record.id
   end
 
   def self.run(key, options={}, &block)
@@ -29,25 +29,7 @@ class Locker
     get(blocking)
 
     if @locked
-      begin
-        if @check
-          parent_thread = Thread.current
-          connection    = @model.connection
-
-          checker = Thread.new do
-            while @locked
-              sleep @check_every
-              check(parent_thread, connection)
-            end
-          end
-        end
-
-        block.call
-      ensure
-        if @check
-          checker.exit rescue nil
-        end
-      end
+      block.call
     end
 
     @locked
@@ -55,47 +37,41 @@ class Locker
     release
   end
 
-  def get(blocking=true)
-    lock_with = blocking ? "FOR UPDATE" : "FOR UPDATE NOWAIT"
-    @model.connection.begin_db_transaction
-    @model.find_by_key(@key).lock!(lock_with)
-    @locked = true
-  rescue ActiveRecord::StatementInvalid => e
-    if e.message !~ /could not obtain lock on row/
-      release
-      raise
-    end
-
-    false
+  def get(blocking=@blocking)
+    @locked = get_advisory_lock(blocking)
   end
 
   def release
     @locked = false
-    @model.connection.rollback_db_transaction unless @model.connection.outside_transaction?
-  end
-
-  def check(options={})
-    if @check
-      thread     = options[:thread]     || Thread.current
-      connection = options[:connection] || @model.connection
-
-      if !connection.active? || connection.outside_transaction?
-        thread.raise LockStolen if @locked
-      end
-
-      @locked
-    else
-      true
-    end
+    release_advisory_lock
   end
 
 
 private
 
-  def ensure_key_exists
-    model.find_by_key(@key) || model.create(:key => @key)
+  def find_or_create_lock_record
+    model.find_by_key(@key) || model.create!(:key => @key)
   rescue ActiveRecord::StatementInvalid => e
     raise unless e.message =~ /duplicate key value violates unique constraint/
+  end
+
+  def get_advisory_lock(blocking)
+    success = model.connection.select_value("SELECT pg_#{blocking ? "" : "try_"}advisory_lock(#{@lock_id})") == "t"
+
+    if success
+      update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC'", @identifier], ["id = ?", @lock_id])
+    end
+
+    success
+  end
+
+  def release_advisory_lock
+    update_all(["locked_by = NULL, locked_at = NULL"], ["id = ? AND locked_by = ?", @lock_id, @identifier])
+    model.connection.select_value("SELECT pg_advisory_unlock(#{@lock_id})") == "t"
+  end
+
+  def update_all(*args)
+    model.update_all(*args) > 0
   end
 
 end
