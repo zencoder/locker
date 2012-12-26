@@ -5,7 +5,7 @@ class Locker
     SecureRandom = ActiveSupport::SecureRandom
   end
 
-  attr_accessor :identifier, :key, :renew_every, :lock_for, :model, :locked, :blocking
+  attr_accessor :identifier, :key, :model, :locked, :blocking, :check, :check_every
 
   class << self
     attr_accessor :model
@@ -14,17 +14,16 @@ class Locker
   def initialize(key, options={})
     @identifier  = "host:#{Socket.gethostname} pid:#{Process.pid} guid:#{SecureRandom.hex(16)}" rescue "pid:#{Process.pid} guid:#{SecureRandom.hex(16)}"
     @key         = key
-    @renew_every = (options[:renew_every] || 10.seconds).to_f
-    @lock_for    = (options[:lock_for] || 30.seconds).to_f
     @model       = (options[:model] || self.class.model || ::Lock)
     @blocking    = !!options[:blocking]
     @locked      = false
+    @lock_id     = find_or_create_lock_record.id
+    @check       = options.fetch(:check, true)
+    @check_every = (options[:check_every] || 10.seconds).to_f
 
-    raise ArgumentError, "renew_every must be greater than 0" if @renew_every <= 0
-    raise ArgumentError, "lock_for must be greater than 0" if @lock_for <= 0
-    raise ArgumentError, "renew_every must be less than lock_for" if @renew_every >= @lock_for
-
-    ensure_key_exists
+    if @check
+      raise ArgumentError, "check_every must be greater than 0" if @check_every <= 0
+    end
   end
 
   def self.run(key, options={}, &block)
@@ -33,63 +32,98 @@ class Locker
   end
 
   def run(blocking=@blocking, &block)
-    while !get && blocking
-      sleep 0.5
-    end
+    get(blocking)
 
     if @locked
-      begin
-        parent_thread = Thread.current
+      if @check
+        begin
+          parent_thread = Thread.current
+          connection    = model.connection
 
-        renewer = Thread.new do
-          while @locked
-            sleep @renew_every
-            renew(parent_thread)
+          checker = Thread.new do
+            while @locked
+              sleep @check_every
+              check(parent_thread, connection)
+            end
           end
-        end
 
+          block.call
+        ensure
+          checker.exit rescue nil
+        end
+      else
         block.call
-      ensure
-        renewer.exit rescue nil
-        release if @locked
       end
 
       true
     else
       false
     end
+  ensure
+    release
   end
 
-  def get
-    @locked = update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC', locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}", @identifier],
-                         ["key = ? AND (locked_by IS NULL OR locked_by = ? OR locked_until < clock_timestamp() at time zone 'UTC')", @key, @identifier])
+  def get(blocking=@blocking)
+    @locked = get_advisory_lock(blocking)
   end
 
   def release
-    @locked = update_all(["locked_by = NULL"],["key = ? and locked_by = ?", @key, @identifier])
+    @locked = false
+    release_advisory_lock
   end
 
-  def renew(thread=Thread.current)
-    @locked = update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"], ["key = ? and locked_by = ?", @key, @identifier])
-    thread.raise LockStolen unless @locked
-    @locked
+  def check(thread=Thread.current, connection=model.connection)
+    if connection.active? && holds_advisory_lock?(connection)
+      true
+    else
+      thread.raise LockStolen
+      false
+    end
   end
+
 
 private
 
-  def lock_interval
-    "interval '#{@lock_for} seconds'"
-  end
-
-  def ensure_key_exists
-    model.find_by_key(@key) || model.create(:key => @key)
+  def find_or_create_lock_record
+    model.find_by_key(@key) || model.create!(:key => @key)
   rescue ActiveRecord::StatementInvalid => e
     raise unless e.message =~ /duplicate key value violates unique constraint/
   end
 
-  # Returns a boolean. True if it updates any rows, false if it didn't.
+  def get_advisory_lock(blocking)
+    success = execute_lock == "t"
+
+    while !success && blocking
+      sleep 0.5
+      success = execute_lock == "t"
+    end
+
+    if success
+      update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC'", @identifier], ["id = ?", @lock_id])
+    end
+
+    success
+  end
+
+  def execute_lock
+    model.connection.select_value("SELECT pg_try_advisory_lock(#{@lock_id})")
+  end
+
+  def release_advisory_lock
+    update_all(["locked_by = NULL, locked_at = NULL"], ["id = ? AND locked_by = ?", @lock_id, @identifier])
+    execute_release == "t"
+  end
+
+  def execute_release
+    model.connection.select_value("SELECT pg_advisory_unlock(#{@lock_id})")
+  end
+
   def update_all(*args)
     model.update_all(*args) > 0
+  end
+
+  def holds_advisory_lock?(connection)
+    "t" == connection.select_value("SELECT 't' FROM pg_locks WHERE locktype = 'advisory' AND pid = pg_backend_pid() AND objid = #{@lock_id}")
   end
 
 end
