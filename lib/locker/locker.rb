@@ -73,7 +73,7 @@ class Locker
   end
 
   def check(thread=Thread.current, connection=model.connection)
-    if holds_advisory_lock?(connection)
+    if connection.active? && holds_advisory_lock?(connection)
       true
     else
       thread.raise LockStolen
