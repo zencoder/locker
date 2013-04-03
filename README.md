@@ -137,6 +137,14 @@ Locker.run("some-unique-key", :model => SomeOtherLockModel) do
 end
 ```
 
+If you need to know how many times the lock has been acquired, this is available as well.
+
+```ruby
+Locker.run("some-unique-key") do |sequence|
+  # sequence is the number of times the lock has been acquired
+end
+```
+
 ## A Common pattern
 
 In our use we've settled on a common pattern, one that lets us distribute the load of our processes between our application and/or utility servers while making sure we have no single point of failure. This means that no single server going down (except the database) will stop the code from executing. Continuing from the code above, we'll use the example of the RSS/Atom feed checker, `FeedChecker.check_for_new_feeds`. To improve on the previous examples, we'll make the code rotate among our servers, so over a long enough time period each server will have spent an equal amount of time running the task.
