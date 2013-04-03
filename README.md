@@ -4,6 +4,16 @@ Locker is a locking mechanism for limiting the concurrency of ruby code using th
 
 Locker is dependent on Postgres and the ActiveRecord (>= 2.3.14) gem.
 
+**NOTE:** In the next minor version (0.1.0), the generated Locker migration has changed to include an integer field named `sequence` with a default of zero. Since I'm pretty sure Zencoder is the only one using this gem at the moment, I opted to not include an upgrade path. If you really must, however:
+
+In Rails 2.3.x+:
+
+    script/generate migration add_sequence_to_locks sequence:integer
+
+In Rails 3.x+:
+
+    script/rails generate migration add_sequence_to_locks sequence:integer
+
 ## The Basics
 
 In its simplest form it can be used as follows:
