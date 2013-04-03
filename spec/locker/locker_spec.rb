@@ -85,6 +85,25 @@ describe Locker do
         end
       end.to raise_error(Locker::LockStolen)
     end
+
+    it "should call the passed in block when the lock is aquired" do
+      value = nil
+      Locker.run("foo") do
+        value = 1
+      end
+
+      expect(value).to eq(1)
+    end
+
+    it "should pass in a sequence number representing the number of times the lock has been locked" do
+      (1..10).each do |i|
+        value = nil
+        Locker.run("foo") do |sequence|
+          value = sequence
+        end
+        expect(value).to eq(i)
+      end
+    end
   end
 
   describe "blocking" do

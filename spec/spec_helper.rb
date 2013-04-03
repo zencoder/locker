@@ -24,6 +24,7 @@ ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS locks")
 ActiveRecord::Base.connection.create_table(:locks) do |t|
   t.string :locked_by
   t.string :key
+  t.integer :sequence, :default => 0
   t.datetime :locked_at
   t.datetime :locked_until
 end
@@ -40,6 +41,14 @@ class FakeLock
 
   def self.find_by_key(key)
     fake_locks[key]
+  end
+
+  def self.find_by_key_and_locked_by(key, locked_by)
+    lock = fake_locks[key]
+
+    if lock && lock.locked_by == locked_by
+      lock
+    end
   end
 
   def self.create(attributes={})
