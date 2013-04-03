@@ -1,4 +1,4 @@
-# Locker
+# Locker [![Build Status](https://travis-ci.org/zencoder/locker.png)](https://travis-ci.org/zencoder/locker)
 
 Locker is a locking mechanism for limiting the concurrency of ruby code using the database.
 

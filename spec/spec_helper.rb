@@ -10,7 +10,19 @@ require 'locker'
 ActiveRecord::Base.time_zone_aware_attributes = true
 ActiveRecord::Base.default_timezone = "UTC"
 
-config = YAML.load_file(File.join(File.dirname(__FILE__), 'database.yml'))
+if File.exist?(File.join(File.dirname(__FILE__), 'database.yml'))
+  config = YAML.load_file(File.join(File.dirname(__FILE__), 'database.yml'))
+else
+  puts "database.yml did not exist, using defaults"
+  config = { "reconnect" => false,
+             "database"  => "locker_test",
+             "adapter"   => "postgresql",
+             "password"  => nil,
+             "user"      => "postgres",
+             "encoding"  => "utf8",
+             "pool"      => 5 }
+end
+
 begin
   ActiveRecord::Base.establish_connection(config.merge('database' => 'postgres', 'schema_search_path' => 'public'))
   ActiveRecord::Base.connection.create_database(config['database'], config.merge("encoding" => config['encoding'] || ENV['CHARSET'] || 'utf8'))
