@@ -4,7 +4,7 @@ class Create<%= plural_name.camelize %> < ActiveRecord::Migration
     create_table :<%= plural_name %> do |t|
       t.string :locked_by
       t.string :key
-      t.integer :sequence, :default => 0
+      t.integer :sequence, :default => 0, :limit => 8
       t.datetime :locked_at
       t.datetime :locked_until
     end
@@ -16,7 +16,7 @@ class Create<%= plural_name.camelize %> < ActiveRecord::Migration
     create_table :<%= plural_name %> do |t|
       t.string :locked_by
       t.string :key
-      t.integer :sequence, :default => 0
+      t.integer :sequence, :default => 0, :limit => 8
       t.datetime :locked_at
       t.datetime :locked_until
     end
