@@ -1,9 +1,8 @@
+require "socket"
+require "securerandom"
+
 class Locker
   class LockStolen < StandardError; end
-
-  if !defined?(SecureRandom)
-    SecureRandom = ActiveSupport::SecureRandom
-  end
 
   attr_accessor :identifier, :key, :renew_every, :lock_for, :model, :locked, :blocking
 
