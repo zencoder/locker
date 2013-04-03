@@ -9,3 +9,7 @@ end
 platforms :ruby do
   gem "pg"
 end
+
+group :development, :test do
+  gem "rspec"
+end
