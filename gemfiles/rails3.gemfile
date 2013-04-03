@@ -1,0 +1,9 @@
+gem "activerecord",  ">=3.2", "<4"
+
+platforms :jruby do
+  gem 'activerecord-jdbcpostgresql-adapter'
+end
+
+platforms :ruby do
+  gem "pg"
+end
