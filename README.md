@@ -18,6 +18,10 @@ Then add a line that changes the default of the column to zero:
 
     change_column_default :locks, :sequence, 0
 
+## Supported Rubies
+
+See [the travis configuration file](https://github.com/zencoder/locker/blob/master/.travis.yml) for which ruby versions we support.
+
 ## The Basics
 
 In its simplest form it can be used as follows:
