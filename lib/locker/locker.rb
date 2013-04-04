@@ -47,7 +47,7 @@ class Locker
           end
         end
 
-        block.call
+        block.call(sequence)
       ensure
         renewer.exit rescue nil
         release if @locked
@@ -60,7 +60,7 @@ class Locker
   end
 
   def get
-    @locked = update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC', locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}", @identifier],
+    @locked = update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC', locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}, sequence = sequence + 1", @identifier],
                          ["key = ? AND (locked_by IS NULL OR locked_by = ? OR locked_until < clock_timestamp() at time zone 'UTC')", @key, @identifier])
   end
 
@@ -72,6 +72,15 @@ class Locker
     @locked = update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"], ["key = ? and locked_by = ?", @key, @identifier])
     thread.raise LockStolen unless @locked
     @locked
+  end
+
+  def sequence
+    if @sequence
+      @sequence
+    else
+      record = model.find_by_key_and_locked_by(@key, @identifier)
+      @sequence = record && record.sequence
+    end
   end
 
 private

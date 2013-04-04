@@ -4,6 +4,16 @@ Locker is a locking mechanism for limiting the concurrency of ruby code using th
 
 Locker is dependent on Postgres and the ActiveRecord (>= 2.3.14) gem.
 
+**NOTE:** In the next minor version (0.1.0), the generated Locker migration has changed to include a bigint field named `sequence` with a default of zero. Since I'm pretty sure Zencoder is the only one using this gem at the moment, I opted to not include an upgrade path. If you really must, however:
+
+In Rails 2.3.x+:
+
+    script/generate migration add_sequence_to_locks sequence:bigint
+
+In Rails 3.x+:
+
+    script/rails generate migration add_sequence_to_locks sequence:bigint
+
 ## The Basics
 
 In its simplest form it can be used as follows:
@@ -134,6 +144,14 @@ end
 
 Locker.run("some-unique-key", :model => SomeOtherLockModel) do
   # Locked using SomeOtherLockModel
+end
+```
+
+If you need to know how many times the lock has been acquired, this is available as well.
+
+```ruby
+Locker.run("some-unique-key") do |sequence|
+  # sequence is the number of times the lock has been acquired
 end
 ```
 
