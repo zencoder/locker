@@ -14,6 +14,10 @@ In Rails 3.x+:
 
     script/rails generate migration add_sequence_to_locks sequence:bigint
 
+Then add a line that changes the default of the column to zero:
+
+    change_column_default :locks, :sequence, 0
+
 ## The Basics
 
 In its simplest form it can be used as follows:
