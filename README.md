@@ -14,9 +14,10 @@ In Rails 3.x+:
 
     script/rails generate migration add_sequence_to_locks sequence:bigint
 
-Then add a line that changes the default of the column to zero:
+Then add a line that changes the default of the column to zero and updates the existing records:
 
     change_column_default :locks, :sequence, 0
+    execute "UPDATE locks SET sequence = 0"
 
 ## Supported Rubies
 
