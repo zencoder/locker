@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+[Full Changelog](http://github.com/zencoder/locker/compare/v0.2.0...v0.2.1)
+
+Enhancements:
+
+* Removed support for rails 2.
+
 ## 0.2.0
 
 [Full Changelog](http://github.com/zencoder/locker/compare/v0.1.0...v0.2.0)
