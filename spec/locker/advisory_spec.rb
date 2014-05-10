@@ -33,20 +33,25 @@ describe Locker::Advisory do
       lock1 = false
       lock2 = false
 
-      t = Thread.new do
+      cond = ConditionVariable.new
+      mutex = Mutex.new
+
+      t1 = Thread.new do
         Locker::Advisory.run("foo") do
           lock1 = true
           sleep 1
         end
       end
 
-      Thread.pass
-
-      lock2_result = Locker::Advisory.run("foo") do
-        lock2 = true
+      t2 = Thread.new do
+        Thread.pass
+        Locker::Advisory.run("foo") do
+          lock2 = true
+        end
       end
 
-      lock1_result = t.join
+      lock1_result = t1.value
+      lock2_result = t2.value
       lock1.should be_true
       lock2.should be_false
       lock1_result.should be_true
