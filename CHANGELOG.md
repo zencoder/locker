@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+[Full Changelog](http://github.com/zencoder/locker/compare/v0.1.0...v0.2.0)
+
+Enhancements:
+
+* Added the ability to use Postgres advisory locks via Locker::Advisory.
+
 ## 0.1.0
 
 [Full Changelog](http://github.com/zencoder/locker/compare/v0.0.3...v0.1.0)
