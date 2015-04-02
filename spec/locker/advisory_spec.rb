@@ -8,14 +8,14 @@ describe Locker::Advisory do
       advisory.key.should == "foo"
       advisory.crc.should == -1938594527
       advisory.lockspace.should == 1
-      advisory.blocking.should be_false
-      advisory.locked.should be_false
+      advisory.blocking.should be false
+      advisory.locked.should be false
     end
 
     it "should have some overridable values" do
       advisory = Locker::Advisory.new("foo", :lockspace => 2, :blocking => true)
       advisory.lockspace.should == 2
-      advisory.blocking.should be_true
+      advisory.blocking.should be true
     end
 
     it "should validate key" do
@@ -52,10 +52,10 @@ describe Locker::Advisory do
 
       lock1_result = t1.value
       lock2_result = t2.value
-      lock1.should be_true
-      lock2.should be_false
-      lock1_result.should be_true
-      lock2_result.should be_false
+      lock1.should be true
+      lock2.should be false
+      lock1_result.should be true
+      lock2_result.should be false
     end
 
     it "should release locks after the block is finished" do
@@ -70,10 +70,10 @@ describe Locker::Advisory do
         lock2 = true
       end
 
-      lock1.should be_true
-      lock2.should be_true
-      lock1_result.should be_true
-      lock2_result.should be_true
+      lock1.should be true
+      lock2.should be true
+      lock1_result.should be true
+      lock2_result.should be true
     end
   end
 

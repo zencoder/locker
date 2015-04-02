@@ -14,8 +14,8 @@ describe Locker do
       locker.lock_for.should == 30
       locker.model.should == Lock
       locker.identifier.should match(/^#{Regexp.escape("host:#{Socket.gethostname} pid:#{Process.pid}")} guid:[a-f0-9]+$/)
-      locker.blocking.should be_false
-      locker.locked.should be_false
+      locker.blocking.should be false
+      locker.locked.should be false
     end
 
     it "should have some overridable values" do
@@ -25,8 +25,8 @@ describe Locker do
       locker.lock_for.should == 60
       locker.model.should == FakeLock
       locker.identifier.should match(/^#{Regexp.escape("host:#{Socket.gethostname} pid:#{Process.pid}")} guid:[a-f0-9]+$/)
-      locker.blocking.should be_true
-      locker.locked.should be_false
+      locker.blocking.should be true
+      locker.locked.should be false
     end
 
     it "should ensure that the key exists" do
@@ -48,7 +48,7 @@ describe Locker do
   describe "locking" do
     it "should lock a record" do
       locker = Locker.new("foo")
-      locker.get.should be_true
+      locker.get.should be true
       lock = Lock.find_by_key("foo")
       lock.locked_until.should be <= (Time.now.utc + locker.lock_for)
       lock.locked_by.should == locker.identifier
@@ -57,12 +57,12 @@ describe Locker do
 
     it "should renew a lock" do
       locker = Locker.new("foo")
-      locker.get.should be_true
+      locker.get.should be true
       lock = Lock.find_by_key("foo")
       lock.locked_until.should be <= (Time.now.utc + locker.lock_for)
       lock.locked_by.should == locker.identifier
       lock.locked_at.should be < Time.now.utc
-      locker.renew.should be_true
+      locker.renew.should be true
       lock = Lock.find_by_key("foo")
       lock.locked_until.should be <= (Time.now.utc + locker.lock_for)
       lock.locked_by.should == locker.identifier
@@ -71,7 +71,7 @@ describe Locker do
 
     it "should raise when someone steals the lock" do
       locker = Locker.new("foo")
-      locker.get.should be_true
+      locker.get.should be true
       lock = Lock.find_by_key("foo")
       lock.update_attribute(:locked_by, "someone else")
       expect{ locker.renew }.to raise_error(Locker::LockStolen)
@@ -130,15 +130,15 @@ describe Locker do
     end
 
     it "should return false when we can't obtain the lock" do
-      @second_locker.run{raise "SHOULD NOT RUN KTHXBAI"}.should be_false
-      @first_locker.run{ "something" }.should be_true
+      @second_locker.run{raise "SHOULD NOT RUN KTHXBAI"}.should be false
+      @first_locker.run{ "something" }.should be true
     end
 
     it "should take less than half a second to fail" do
       start_time = Time.now.to_f
       return_value = @second_locker.run{raise "SHOULD NOT RUN KTHXBAI"}
       end_time = Time.now.to_f
-      return_value.should be_false
+      return_value.should be false
       run_time = (end_time - start_time)
       run_time.should be < 0.5
     end
