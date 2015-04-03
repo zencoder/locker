@@ -1,3 +1,8 @@
 source "https://rubygems.org"
 
-gemspec
+gem "activerecord", ">=3.2", "<5"
+
+group :development, :test do
+  gem "pg"
+  gem "rspec", "~> 3.2.0"
+end

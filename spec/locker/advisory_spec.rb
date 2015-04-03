@@ -5,17 +5,17 @@ describe Locker::Advisory do
   describe "initialization" do
     it "should have default values" do
       advisory = Locker::Advisory.new("foo")
-      advisory.key.should == "foo"
-      advisory.crc.should == -1938594527
-      advisory.lockspace.should == 1
-      advisory.blocking.should be_false
-      advisory.locked.should be_false
+      expect(advisory.key).to eq("foo")
+      expect(advisory.crc).to eq(-1938594527)
+      expect(advisory.lockspace).to eq(1)
+      expect(advisory.blocking).to be false
+      expect(advisory.locked).to be false
     end
 
     it "should have some overridable values" do
       advisory = Locker::Advisory.new("foo", :lockspace => 2, :blocking => true)
-      advisory.lockspace.should == 2
-      advisory.blocking.should be_true
+      expect(advisory.lockspace).to eq(2)
+      expect(advisory.blocking).to be true
     end
 
     it "should validate key" do
@@ -33,18 +33,15 @@ describe Locker::Advisory do
       lock1 = false
       lock2 = false
 
-      cond = ConditionVariable.new
-      mutex = Mutex.new
-
       t1 = Thread.new do
         Locker::Advisory.run("foo") do
           lock1 = true
-          sleep 1
+          sleep 2
         end
       end
 
       t2 = Thread.new do
-        Thread.pass
+        sleep 1
         Locker::Advisory.run("foo") do
           lock2 = true
         end
@@ -52,10 +49,10 @@ describe Locker::Advisory do
 
       lock1_result = t1.value
       lock2_result = t2.value
-      lock1.should be_true
-      lock2.should be_false
-      lock1_result.should be_true
-      lock2_result.should be_false
+      expect(lock1).to be true
+      expect(lock2).to be false
+      expect(lock1_result).to be true
+      expect(lock2_result).to be false
     end
 
     it "should release locks after the block is finished" do
@@ -70,10 +67,10 @@ describe Locker::Advisory do
         lock2 = true
       end
 
-      lock1.should be_true
-      lock2.should be_true
-      lock1_result.should be_true
-      lock2_result.should be_true
+      expect(lock1).to be true
+      expect(lock2).to be true
+      expect(lock1_result).to be true
+      expect(lock2_result).to be true
     end
   end
 

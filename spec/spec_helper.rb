@@ -8,7 +8,7 @@ require 'active_record'
 require 'locker'
 
 ActiveRecord::Base.time_zone_aware_attributes = true
-ActiveRecord::Base.default_timezone = "UTC"
+ActiveRecord::Base.default_timezone = :utc
 
 if File.exist?(File.join(File.dirname(__FILE__), 'database.yml'))
   config = YAML.load_file(File.join(File.dirname(__FILE__), 'database.yml'))
@@ -77,11 +77,19 @@ end
 
 RSpec.configure do |c|
   c.before do
-    ActiveRecord::Base.connection.increment_open_transactions
-    ActiveRecord::Base.connection.begin_db_transaction
+    if ActiveRecord::VERSION::MAJOR < 4
+      ActiveRecord::Base.connection.increment_open_transactions
+      ActiveRecord::Base.connection.begin_db_transaction
+    else
+      ActiveRecord::Base.connection.begin_transaction
+    end
   end
   c.after do
-    ActiveRecord::Base.connection.rollback_db_transaction
-    ActiveRecord::Base.connection.decrement_open_transactions
+    if ActiveRecord::VERSION::MAJOR < 4
+      ActiveRecord::Base.connection.rollback_db_transaction
+      ActiveRecord::Base.connection.decrement_open_transactions
+    else
+      ActiveRecord::Base.connection.rollback_transaction
+    end
   end
 end

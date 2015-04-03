@@ -32,8 +32,6 @@ class Locker
     def run(&block)
       connection = ActiveRecord::Base.connection_pool.checkout
       connection.transaction :requires_new => true do
-        ensure_unlocked(connection)
-
         while !get(connection) && @blocking
           sleep 0.5
         end
@@ -57,7 +55,7 @@ class Locker
 
             block.call
           ensure
-            release(connection) if @locked
+            @locked = false
             # Using a mutex to synchronize so that we're sure we're not
             # executing a query when we kill the thread.
             mutex.synchronize{}
@@ -81,15 +79,6 @@ class Locker
       @locked = successful_result?(result)
     end
 
-    def release(connection)
-      result = exec_query(connection, "SELECT pg_advisory_unlock(#{connection.quote(@lockspace)}, #{connection.quote(@crc)})")
-      successful_result?(result)
-    end
-
-    def ensure_unlocked(connection)
-      while release(connection); end
-    end
-
     def check(connection, thread)
       if !connection.active?
         @locked = false
@@ -108,9 +97,7 @@ class Locker
     end
 
     def exec_query(connection, query)
-      silence_stderr do
-        connection.exec_query(query, "Locker::Advisory")
-      end
+      connection.exec_query(query, "Locker::Advisory")
     end
 
   end
