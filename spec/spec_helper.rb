@@ -8,8 +8,6 @@ require 'active_record'
 require 'locker'
 
 ActiveRecord::Base.time_zone_aware_attributes = true
-# activerecord 4 needs :utc, todo: double-check if this works in
-# activerecord 3 or if that needs "UTC"
 ActiveRecord::Base.default_timezone = :utc
 
 if File.exist?(File.join(File.dirname(__FILE__), 'database.yml'))
