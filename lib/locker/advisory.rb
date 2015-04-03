@@ -108,7 +108,7 @@ class Locker
     end
 
     def exec_query(connection, query)
-      silence_stderr do
+      silence_stream(STDERR) do
         connection.exec_query(query, "Locker::Advisory")
       end
     end
