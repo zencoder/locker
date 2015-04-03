@@ -73,8 +73,8 @@ class Locker
 
   def renew(thread=Thread.current)
     @locked = updated?(model.
-                      where(["key = ? and locked_by = ?", @key, @identifier]).
-                      update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"]))
+                       where(["key = ? and locked_by = ?", @key, @identifier]).
+                       update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"]))
     thread.raise LockStolen unless @locked
     @locked
   end
