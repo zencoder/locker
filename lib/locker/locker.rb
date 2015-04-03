@@ -60,16 +60,21 @@ class Locker
   end
 
   def get
-    @locked = update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC', locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}, sequence = sequence + 1", @identifier],
-                         ["key = ? AND (locked_by IS NULL OR locked_by = ? OR locked_until < clock_timestamp() at time zone 'UTC')", @key, @identifier])
+    @locked = updated?(model.
+                       where(["key = ? AND (locked_by IS NULL OR locked_by = ? OR locked_until < clock_timestamp() at time zone 'UTC')", @key, @identifier]).
+                       update_all(["locked_by = ?, locked_at = clock_timestamp() at time zone 'UTC', locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}, sequence = sequence + 1", @identifier]))
   end
 
   def release
-    @locked = update_all(["locked_by = NULL"],["key = ? and locked_by = ?", @key, @identifier])
+    @locked = updated?(model.
+                       where(["key = ? and locked_by = ?", @key, @identifier]).
+                       update_all(["locked_by = NULL"]))
   end
 
   def renew(thread=Thread.current)
-    @locked = update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"], ["key = ? and locked_by = ?", @key, @identifier])
+    @locked = updated?(model.
+                      where(["key = ? and locked_by = ?", @key, @identifier]).
+                      update_all(["locked_until = clock_timestamp() at time zone 'UTC' + #{lock_interval}"]))
     thread.raise LockStolen unless @locked
     @locked
   end
@@ -96,8 +101,8 @@ private
   end
 
   # Returns a boolean. True if it updates any rows, false if it didn't.
-  def update_all(*args)
-    model.update_all(*args) > 0
+  def updated?(rows_updated)
+    rows_updated > 0
   end
 
 end
