@@ -79,19 +79,19 @@ end
 
 RSpec.configure do |c|
   c.before do
-    if connection_maintains_transaction_count?
+    if ActiveRecord::VERSION::MAJOR < 4
       ActiveRecord::Base.connection.increment_open_transactions
+      ActiveRecord::Base.connection.begin_db_transaction
+    else
+      ActiveRecord::Base.connection.begin_transaction
     end
-    ActiveRecord::Base.connection.begin_db_transaction
   end
   c.after do
-    ActiveRecord::Base.connection.rollback_db_transaction
-    if connection_maintains_transaction_count?
+    if ActiveRecord::VERSION::MAJOR < 4
+      ActiveRecord::Base.connection.rollback_db_transaction
       ActiveRecord::Base.connection.decrement_open_transactions
+    else
+      ActiveRecord::Base.connection.rollback_transaction
     end
   end
-end
-
-def connection_maintains_transaction_count?
-  ActiveRecord::VERSION::MAJOR < 4
 end
