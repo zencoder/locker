@@ -58,9 +58,10 @@ class Locker
             @locked = false
             # Using a mutex to synchronize so that we're sure we're not
             # executing a query when we kill the thread.
-            mutex.synchronize{}
-            if checker.alive?
-              checker.exit rescue nil
+            mutex.synchronize do
+              if checker.alive?
+                checker.exit rescue nil
+              end
             end
           end
           true
