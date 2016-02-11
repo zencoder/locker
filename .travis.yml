@@ -1,8 +1,10 @@
 language: ruby
 gemfile:
-  - gemfiles/rails3.gemfile
+  - Gemfile_rails_3
+  - Gemfile_rails_4
 rvm:
-  - 2.1.5
-  - 2.2.1
-  - jruby-19mode
+  - ruby-2.1.8
+  - ruby-2.2.4
+  - ruby-2.3.0
+  - jruby-9.0.4.0
 script: bundle exec rspec
