@@ -27,7 +27,7 @@ Suppose you have a process running on a server that continually performs a task.
 #### Code (lib/new_feed_checker.rb)
 
 ```ruby
-while true
+loop do
   FeedChecker.check_for_new_feeds
 end
 ```
@@ -49,7 +49,7 @@ This would work fantastic, so long as `FeedChecker.check_for_new_feeds` is safe 
 ```ruby
 Locker.run("new-feed-checker") do # One server will get the lock
   # Only one server will get here
-  while true
+  loop do
     FeedChecker.check_for_new_feeds
   end
 end # Lock is released at this point
@@ -68,7 +68,7 @@ This is great! We've made sure that only one server can run the code at any give
 ```ruby
 Locker.run("new-feed-checker", :blocking => true) do
   # Only one server will get here at a time. The other server will patiently wait.
-  while true
+  loop do
     FeedChecker.check_for_new_feeds
   end
 end # Lock is released at this point
@@ -150,7 +150,7 @@ end
 In our use we've settled on a common pattern, one that lets us distribute the load of our processes between our application and/or utility servers while making sure we have no single point of failure. This means that no single server going down (except the database) will stop the code from executing. Continuing from the code above, we'll use the example of the RSS/Atom feed checker, `FeedChecker.check_for_new_feeds`. To improve on the previous examples, we'll make the code rotate among our servers, so over a long enough time period each server will have spent an equal amount of time running the task.
 
 ```ruby
-while true
+loop do
   Locker.run("new-feed-checker", :blocking => true) do
     FeedChecker.check_for_new_feeds
   end
