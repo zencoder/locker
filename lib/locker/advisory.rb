@@ -33,7 +33,7 @@ class Locker
       connection = ActiveRecord::Base.connection_pool.checkout
       connection.transaction :requires_new => true do
         while !get(connection) && @blocking
-          sleep 0.5
+          sleep 0.005
         end
 
         if @locked
