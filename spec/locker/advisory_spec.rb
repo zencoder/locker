@@ -83,8 +83,7 @@ describe Locker::Advisory do
 
       t2 = Thread.new do
         sleep 0.5
-        Locker::Advisory.run("foo", :blocking => true, :block_timeout => 1) do
-        end
+        Locker::Advisory.run("foo", :blocking => true, :block_timeout => 1){}
       end
 
       t1.join
