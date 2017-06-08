@@ -72,6 +72,27 @@ describe Locker::Advisory do
       expect(lock1_result).to be true
       expect(lock2_result).to be true
     end
+
+    it "blocks with a timeout" do
+      started_at = Time.now
+      t1 = Thread.new do
+        Locker::Advisory.run("foo") do
+          sleep 2
+        end
+      end
+
+      t2 = Thread.new do
+        sleep 0.5
+        Locker::Advisory.run("foo", :blocking => true, :block_timeout => 1) do
+          sleep 10 # never hits this
+        end
+      end
+
+      expect(t1.value).to be(true)
+      expect(t2.value).to be(false)
+
+      expect(Time.now - started_at).to be < 2.5
+    end
   end
 
 end

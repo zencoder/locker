@@ -13,11 +13,13 @@ class Locker
     def initialize(key, options={})
       raise ArgumentError, "key must be a string" unless key.is_a?(String)
 
-      @key       = key
-      @crc       = convert_to_crc(key)
-      @lockspace = (options[:lockspace] || 1)
-      @blocking  = !!options[:blocking]
-      @locked    = false
+      @key             = key
+      @crc             = convert_to_crc(key)
+      @lockspace       = (options[:lockspace] || 1)
+      @blocking        = !!options[:blocking]
+      @locked          = false
+      @block_timeout   = options[:block_timeout]
+      @block_spin_wait = options[:block_spin_wait] || 0.005
 
       if !@lockspace.is_a?(Integer) || @lockspace < MIN_LOCK || @lockspace > MAX_LOCK
         raise ArgumentError, "The :lockspace option must be an integer between #{MIN_LOCK} and #{MAX_LOCK}"
@@ -32,8 +34,13 @@ class Locker
     def run(&block)
       connection = ActiveRecord::Base.connection_pool.checkout
       connection.transaction :requires_new => true do
+        if @blocking && @block_timeout
+          break_at = Time.now + @block_timeout
+        end
+
         while !get(connection) && @blocking
-          sleep 0.005
+          break if break_at && break_at < Time.now
+          sleep @block_spin_wait
         end
 
         if @locked
