@@ -34,7 +34,7 @@ class Locker
     def run(&block)
       connection = ActiveRecord::Base.connection_pool.checkout
       connection.transaction :requires_new => true do
-        if @block_timeout
+        if @blocking && @block_timeout
           break_at = Time.now + @block_timeout
         end
 
