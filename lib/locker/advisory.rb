@@ -39,8 +39,8 @@ class Locker
         end
 
         while !get(connection) && @blocking
-          sleep @block_spin_wait
           break if break_at && break_at < Time.now
+          sleep @block_spin_wait
         end
 
         if @locked

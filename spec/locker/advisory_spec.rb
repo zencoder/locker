@@ -83,11 +83,13 @@ describe Locker::Advisory do
 
       t2 = Thread.new do
         sleep 0.5
-        Locker::Advisory.run("foo", :blocking => true, :block_timeout => 1){}
+        Locker::Advisory.run("foo", :blocking => true, :block_timeout => 1) do
+          sleep 10 # never hits this
+        end
       end
 
-      t1.join
-      t2.join
+      expect(t1.value).to be(true)
+      expect(t2.value).to be(false)
 
       expect(Time.now - started_at).to be < 2.5
     end
