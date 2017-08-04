@@ -9,3 +9,7 @@ rvm:
   - ruby-2.4.1
   - jruby-9.1.9.0
 script: bundle exec rspec
+matrix:
+  exclude:
+    - rvm: ruby-2.4.1
+      gemfile: Gemfile_rails_3

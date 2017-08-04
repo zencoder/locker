@@ -5,6 +5,8 @@ gem "activerecord", ">=3.2", "<4"
 group :development, :test do
   platform :ruby do
     gem "pg"
+    gem "pry", "~> 0.10.4"
+    gem "pry-byebug", "~> 3.4.2"
   end
 
   platform :jruby do
@@ -12,6 +14,4 @@ group :development, :test do
   end
 
   gem "rspec", "~> 3.2.0"
-  gem "pry", "~> 0.10.4"
-  gem "pry-byebug", "~> 3.4.2"
 end
