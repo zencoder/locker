@@ -12,7 +12,6 @@ group :development, :test do
   end
 
   gem "rspec", "~> 3.2.0"
-  gem "timecop", "~> 0.9.1"
   gem "pry", "~> 0.10.4"
   gem "pry-byebug", "~> 3.4.2"
 end

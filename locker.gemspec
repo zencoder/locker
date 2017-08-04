@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
   s.add_dependency "activerecord",  ">=3.2", "<5"
   s.add_development_dependency "pg", "~> 0"
   s.add_development_dependency "rspec", "~> 3.2"
-  s.add_development_dependency "timecop", "~> 0.9.1"
   s.add_development_dependency "pry", "~> 0.10.4"
   s.add_development_dependency "pry-byebug", "~> 3.4.2"
 end
