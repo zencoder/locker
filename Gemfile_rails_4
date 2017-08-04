@@ -12,4 +12,5 @@ group :development, :test do
   end
 
   gem "rspec", "~> 3.2.0"
+  gem "timecop", "~> 0.9.1"
 end

@@ -1,6 +1,8 @@
 *.gem
 .bundle
 Gemfile.lock
+Gemfile_rails_3.lock
+Gemfile_rails_4.lock
 pkg/*
 /spec/database.yml
 .rvmrc
