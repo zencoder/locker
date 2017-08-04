@@ -4,8 +4,13 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'rubygems'
 require 'bundler/setup'
 require 'active_record'
-require 'pry'
-require 'pry-byebug'
+
+begin
+  require 'pry'
+  require 'pry-byebug'
+rescue LoadError
+  # jruby won't have these
+end
 
 require 'locker'
 
