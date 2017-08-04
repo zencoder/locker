@@ -4,6 +4,8 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'rubygems'
 require 'bundler/setup'
 require 'active_record'
+require 'pry'
+require 'pry-byebug'
 
 require 'locker'
 
