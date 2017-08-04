@@ -26,6 +26,11 @@ class Locker
     ensure_key_exists
   end
 
+  def self.prune(before)
+    m = model || ::Lock
+    m.where(["locked_until < ?", before]).delete_all
+  end
+
   def self.run(key, options={}, &block)
     locker = new(key, options)
     locker.run(&block)

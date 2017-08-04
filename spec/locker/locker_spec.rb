@@ -144,4 +144,19 @@ describe Locker do
     end
   end
 
+  describe "pruning" do
+    it "deletes old locks" do
+      l1 = Lock.create!(:key => "key1", :locked_until => 2.minutes.ago)
+      l2 = Lock.create!(:key => "key2", :locked_until => 4.minutes.ago)
+      l3 = Lock.create!(:key => "key3", :locked_until => 6.minutes.ago)
+      l4 = Lock.create!(:key => "key4", :locked_until => 8.minutes.ago)
+
+      Locker.prune(5.minutes.ago)
+
+      expect( Lock.where(:key => "key1").first ).to_not be_nil
+      expect( Lock.where(:key => "key2").first ).to_not be_nil
+      expect( Lock.where(:key => "key3").first ).to be_nil
+      expect( Lock.where(:key => "key3").first ).to be_nil
+    end
+  end
 end
