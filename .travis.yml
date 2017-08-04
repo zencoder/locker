@@ -3,8 +3,9 @@ gemfile:
   - Gemfile_rails_3
   - Gemfile_rails_4
 rvm:
-  - ruby-2.1.8
-  - ruby-2.2.4
-  - ruby-2.3.0
-  - jruby-9.0.4.0
+  - ruby-2.1.10
+  - ruby-2.2.7
+  - ruby-2.3.4
+  - ruby-2.4.1
+  - jruby-9.1.9.0
 script: bundle exec rspec
