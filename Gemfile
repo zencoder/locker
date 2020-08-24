@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "activerecord", ">=4.2", "<6"
+gem "activerecord", ">=3.2", "<6"
 
 group :development, :test do
   platform :ruby do

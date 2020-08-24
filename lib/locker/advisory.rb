@@ -113,7 +113,11 @@ class Locker
     end
 
     def successful_result?(result)
-      result.rows.size == 1 && result.rows[0].size == 1 && result.rows[0][0]
+      result.rows.size == 1 &&
+        result.rows[0].size == 1 && (
+          result.rows[0][0] == 't' || # Checking for old ActiveRecord
+          result.rows[0][0] # Checking for the value true
+        )
     end
 
     def exec_query(connection, query)

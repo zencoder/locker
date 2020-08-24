@@ -2,7 +2,7 @@
 
 Locker is a locking mechanism for limiting the concurrency of ruby code using the database.
 
-Locker is dependent on Postgres and the ActiveRecord (>= 3.2.0) gem.
+Locker is dependent on Postgres and the ActiveRecord (>= 3.2.0 and < 6.0) gem.
 
 ## Supported Rubies
 
