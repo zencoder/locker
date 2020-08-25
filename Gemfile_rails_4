@@ -10,6 +10,7 @@ group :development, :test do
   end
 
   platform :jruby do
+    gem 'activerecord-postgresql-adapter'
     gem 'activerecord-jdbcpostgresql-adapter'
   end
 
