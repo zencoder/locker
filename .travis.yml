@@ -25,16 +25,17 @@ matrix:
       gemfile: Gemfile_rails_5
     - rvm: ruby-2.4.1
       gemfile: Gemfile_rails_5
+    - rvm: ruby-2.5.5
+      gemfile: Gemfile_rails_3
+    - rvm: ruby-2.5.5
+      gemfile: Gemfile_rails_4
     - rvm: jruby-9.1.9.0
       gemfile: Gemfile_rails_5
 services:
   - postgresql
 addons:
-  postgresql: "11"
+  postgresql: "10"
   apt:
     packages:
-      - postgresql-11
-      - postgresql-client-11
-env:
-  global:
-  - PGPORT=5432
+      - postgresql-10
+      - postgresql-client-10
