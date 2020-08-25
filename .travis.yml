@@ -10,9 +10,6 @@ rvm:
   - ruby-2.4.1
   - ruby-2.5.5
   - jruby-9.1.9.0
-before_install:
-  - sudo cp /etc/postgresql/{9.6,11}/main/pg_hba.conf
-  - sudo service postgresql restart 11  
 before_script:
   - psql --version
   - psql -c 'CREATE DATABASE locker_test;' -U postgres
