@@ -27,6 +27,8 @@ matrix:
       gemfile: Gemfile_rails_5
     - rvm: jruby-9.1.9.0
       gemfile: Gemfile_rails_5
+services:
+  - postgresql
 addons:
   postgresql: "11"
   apt:
