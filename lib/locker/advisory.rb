@@ -116,7 +116,7 @@ class Locker
       result.rows.size == 1 &&
         result.rows[0].size == 1 && (
           result.rows[0][0] == 't' || # Checking for old ActiveRecord
-          result.rows[0][0] # Checking for the value true
+          result.rows[0][0].class == TrueClass # Checking for the value true
         )
     end
 

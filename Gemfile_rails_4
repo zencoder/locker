@@ -4,7 +4,7 @@ gem "activerecord", ">=4", "<5"
 
 group :development, :test do
   platform :ruby do
-    gem "pg", "< 6"
+    gem "pg", "< 1"
     gem "pry", "~> 0.10.4"
     gem "pry-byebug", "~> 3.4.2"
   end
