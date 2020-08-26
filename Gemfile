@@ -10,7 +10,7 @@ group :development, :test do
   end
 
   platform :jruby do
-    gem 'activerecord-jdbcpostgresql-adapter', "~> 50"
+    gem 'activerecord-jdbcpostgresql-adapter', '= 1.3.25'
   end
 
   gem "rspec", "~> 3.9.0"
