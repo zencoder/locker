@@ -6,8 +6,12 @@ class Locker
 
     attr_reader :key, :crc, :lockspace, :blocking, :locked
 
+    # The advisory function we use from PostgreSQL needs the arguments to be
+    # INT, therefore this are the range of int numbers for PostgreSQL
     MAX_LOCK = 2147483647
     MIN_LOCK = -2147483648
+
+    # Max number that a 32bit computer can hold
     OVERFLOW_ADJUSTMENT = 2**32
 
     def initialize(key, options={})
@@ -83,7 +87,13 @@ class Locker
   protected
 
     def get(connection)
-      result = exec_query(connection, "SELECT pg_try_advisory_xact_lock(#{connection.quote(@lockspace)}, #{connection.quote(@crc)})")
+      lockspace_quote = connection.quote(@lockspace)
+      crc_quote = connection.quote(@crc)
+
+      result = exec_query(
+        connection,
+        "SELECT pg_try_advisory_xact_lock(#{lockspace_quote}, #{crc_quote})"
+      )
       @locked = successful_result?(result)
     end
 
@@ -94,6 +104,8 @@ class Locker
       end
     end
 
+    # CRC32 digest to get a decimal numeric of the key used, make sure the
+    # resulting number is within PostgreSql max and min Integer numbers
     def convert_to_crc(key)
       crc = Zlib.crc32(key)
       crc -= OVERFLOW_ADJUSTMENT if crc > MAX_LOCK
@@ -101,7 +113,11 @@ class Locker
     end
 
     def successful_result?(result)
-      result.rows.size == 1 && result.rows[0].size == 1 && result.rows[0][0] == "t"
+      result.rows.size == 1 &&
+        result.rows[0].size == 1 && (
+          result.rows[0][0] == 't' || # Checking for old ActiveRecord
+          result.rows[0][0].class == TrueClass # Checking for the value true
+        )
     end
 
     def exec_query(connection, query)

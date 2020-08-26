@@ -2,14 +2,38 @@ language: ruby
 gemfile:
   - Gemfile_rails_3
   - Gemfile_rails_4
+  - Gemfile_rails_5
 rvm:
   - ruby-2.1.10
   - ruby-2.2.7
   - ruby-2.3.4
   - ruby-2.4.1
+  - ruby-2.5.5
   - jruby-9.1.9.0
 script: bundle exec rspec
 matrix:
   exclude:
     - rvm: ruby-2.4.1
       gemfile: Gemfile_rails_3
+    - rvm: ruby-2.1.10
+      gemfile: Gemfile_rails_5
+    - rvm: ruby-2.2.7
+      gemfile: Gemfile_rails_5
+    - rvm: ruby-2.3.4
+      gemfile: Gemfile_rails_5
+    - rvm: ruby-2.4.1
+      gemfile: Gemfile_rails_5
+    - rvm: ruby-2.5.5
+      gemfile: Gemfile_rails_3
+    - rvm: ruby-2.5.5
+      gemfile: Gemfile_rails_4
+    - rvm: jruby-9.1.9.0
+      gemfile: Gemfile_rails_5
+services:
+  - postgresql
+addons:
+  postgresql: "10"
+  apt:
+    packages:
+      - postgresql-10
+      - postgresql-client-10
